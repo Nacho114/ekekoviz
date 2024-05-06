@@ -117,7 +117,7 @@ def plot_different_stocks(stocks, price_type, title):
     """Plot different stocks on a single plot."""
     fig = init_stock_plot(title)
 
-    curve_colors = ['blue', 'green', 'cyan', 'magenta', 'yellow']
+    curve_colors = ['blue', 'yellow', 'cyan', 'magenta']
     for idx, stock in enumerate(stocks):
         color_index = idx % len(curve_colors)
         dates = stock['df'].index.strftime('%Y-%m-%d')
