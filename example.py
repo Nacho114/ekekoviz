@@ -1,6 +1,5 @@
 import yfinance as yf
 import ekekoviz
-
 # !<User notes>! Specify symbol and period of data to pull
 # --------------------
 symbol = "GPS"
@@ -18,7 +17,17 @@ end_date = '2023-05-22'
 # --------------------
 
 # Slice the DataFrame for the specified date range
-filtered_by_time_df = stock_data.loc[start_date:end_date]
+stock_df = stock_data.loc[start_date:end_date]
 
-ekekoviz.plot(filtered_by_time_df, f'{symbol} Close price action')
+curves = []
 
+price = stock_df['Close']
+curves.append({'values': price, 'name': 'Close'})
+
+ema = price.ewm(span=20, adjust=False).mean()
+curves.append({'values': ema, 'name': 'ema 20'})
+
+ma = price.rolling(window=40, min_periods=1).mean()
+curves.append({'values': ma, 'name': 'ma 40'})
+
+ekekoviz.plot(stock_df, curves, f'{symbol} Close price action')

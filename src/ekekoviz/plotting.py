@@ -1,92 +1,60 @@
 # -*- coding: utf-8 -*-
 """ekekoviz
 
-A small library to plot financial stock data
+A small library to plot financial stock data using Plotly.
 """
 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
 
-# Default colors
-bg_color = "#22262f"
-text_color = '#8f98af'
-grid_line_color = '#323641'
-grid_n_ticks = 10
-red = '#f03538'
-green = '#30cc5a'
+# Configuration section for colors and styling
+COLORS = {
+    'background': "#22262f",
+    'text': '#8f98af',
+    'grid_line': '#323641',
+    'green': '#30cc5a',
+    'red': '#f03538'
+}
+GRID_N_TICKS = 10
 
 def init_stock_plot(title):
+    """Initialize a stock plot with a secondary y-axis."""
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.update_layout(
         title=title,
         xaxis_title='Date',
         hovermode='x',
-        paper_bgcolor=bg_color,
-        plot_bgcolor=bg_color,
+        paper_bgcolor=COLORS['background'],
+        plot_bgcolor=COLORS['background'],
         xaxis=dict(
-            type='category',  # This enables dates with no data to be removed, data type is better but makes this complex.
+            type='category',
             tickformat='%b %Y',
             showgrid=True,
-            gridcolor=grid_line_color,
+            gridcolor=COLORS['grid_line'],
             gridwidth=1,
-            griddash='dot',  # Dotted grid lines,
-            nticks=grid_n_ticks,
+            griddash='dot',
+            nticks=GRID_N_TICKS,
         ),
         yaxis=dict(
             showgrid=True,
-            gridcolor=grid_line_color,
+            gridcolor=COLORS['grid_line'],
             gridwidth=1,
-            griddash='dot',  # Dotted grid lines,
-            nticks=grid_n_ticks
+            griddash='dot',
+            nticks=GRID_N_TICKS
         ),
         yaxis2=dict(
             showgrid=False,
         ),
-        font=dict(color=text_color),
+        font=dict(color=COLORS['text']),
     )
-    return fig
-
-# Helper function to format volume
-def format_volume(vol):
-    if vol >= 1_000_000:
-        return f"{vol / 1_000_000:.3f}M"
-    elif vol >= 1000:
-        return f"{vol / 1000:.3f}K"
-    else:
-        return f"{vol:.3f}"
-
-def add_close_price(fig, stock_df):
-    fig.add_trace(
-        go.Scatter(
-            x=stock_df.index,
-            y=stock_df['Close'], name='Close',
-            mode='lines',  # Use 'lines' to show only the line without markers
-            hovertemplate=(
-                "Date: %{x}<br>" +
-                "Open: %{customdata[0]:.3f}<br>" +
-                "High: %{customdata[1]:.3f}<br>" +
-                "Low: %{customdata[2]:.3f}<br>" +
-                "Close: %{customdata[3]:.3f}<br>" +
-                "Volume: %{customdata[4]}<extra></extra>"
-            ),
-            customdata=np.stack((stock_df['Open'], stock_df['High'], stock_df['Low'], stock_df['Close'], stock_df['Volume'].apply(format_volume)), axis=-1)
-        ),
-        secondary_y=False  # Primary y-axis for price
-    )
-    fig.update_yaxes(title_text='Close', secondary_y=False)
-
     return fig
 
 def add_volume(fig, stock_df):
+    """Add volume bars to the plot."""
+    max_volume = stock_df['Volume'].max() * 1.5
+    colors = [COLORS['green'] if open < close else COLORS['red'] for open, close in zip(stock_df['Open'], stock_df['Close'])]
 
-    # Normalize secondary axis (this a half-assed solution)
-    secondary_y_max = stock_df['Volume'].max() * 1.5
-
-    # Determine colors based on whether the day closed higher or lower
-    colors = [green if o < c else red for o, c in zip(stock_df['Open'], stock_df['Close'])]
-
-    # Add the volume trace
     fig.add_trace(
         go.Bar(
             x=stock_df.index, y=stock_df['Volume'],
@@ -96,19 +64,13 @@ def add_volume(fig, stock_df):
             hoverinfo='none',
             opacity=0.6
         ),
-        secondary_y=True  # Indicate that this trace uses the secondary y-axis
+        secondary_y=True
     )
-
-    # Adjust the secondary y-axis range
-    fig.update_yaxes(
-        title_text="Volume",
-        secondary_y=True,
-        range=[0, secondary_y_max]  # Adjusted max value
-    )
-
+    fig.update_yaxes(title_text="Volume", secondary_y=True, range=[0, max_volume])
     return fig
 
 def add_candlestick(fig, stock_df):
+    """Add candlestick plot to the figure."""
     fig.add_trace(
         go.Candlestick(
             x=stock_df.index,
@@ -116,65 +78,51 @@ def add_candlestick(fig, stock_df):
             high=stock_df['High'],
             low=stock_df['Low'],
             close=stock_df['Close'],
-            increasing_line_color=green,
-            decreasing_line_color=red,
+            increasing_line_color=COLORS['green'],
+            decreasing_line_color=COLORS['red'],
             name='Candlestick',
-            visible='legendonly'
         )
     )
     fig.update_layout(xaxis_rangeslider_visible=False)
     return fig
 
-def add_moving_average(fig, stock_df, window, color):
-    moving_average = stock_df['Close'].rolling(window=window, min_periods=1).mean()
+def add_scatter(fig, dates, values, name, color, visible='legendonly'):
+    """Add scatter plot to the figure."""
     fig.add_trace(
         go.Scatter(
-            x=stock_df.index,
-            y=moving_average,
-            name=f'{window} day MA',
+            x=dates,
+            y=values,
+            name=name,
             line=dict(color=color, width=2),
-            visible='legendonly'  # Initially hidden
+            visible=visible
         )
     )
     return fig
 
-def add_exponential_moving_average(fig, stock_df, span, color):
-    ema = stock_df['Close'].ewm(span=span, adjust=False).mean()
-    fig.add_trace(
-        go.Scatter(
-            x=stock_df.index,
-            y=ema,
-            name=f'{span} day EMA',
-            line=dict(color=color, width=2),
-            visible='legendonly'  # Initially hidden
-        )
-    )
-    return fig
-
-def plot(stock_df, title):
-    # Note: we re-index to make the x-axis index prettier, can't use native
-    # date stlye in plotting, and need to use category instead which removes
-    # empty days.
-    stock_df.index = stock_df.index.strftime('%Y-%m-%d')
-
+def plot(stock_df, curves, title):
+    """Plot stock data with additional curves."""
+    plot_df = stock_df.copy()
+    plot_df.index = plot_df.index.strftime('%Y-%m-%d')
     fig = init_stock_plot(title)
-    fig = add_close_price(fig, stock_df)
-    fig = add_candlestick(fig, stock_df)
+    fig = add_candlestick(fig, plot_df)
 
-    # !<User notes>! Here are the MA and EMA definitions! Change them here :)
-    # --------------------
-    ema_short_window = 12
-    ema_long_window = 150
-    ma_window = 50
-    # --------------------
+    curve_colors = ['blue', 'green', 'cyan', 'magenta', 'yellow']
+    for idx, curve in enumerate(curves):
+        color_index = idx % len(curve_colors)
+        fig = add_scatter(fig, plot_df.index, curve['values'], curve['name'], curve_colors[color_index])
 
-    fig = add_exponential_moving_average(fig, stock_df, ema_short_window, 'yellow')
-    fig = add_exponential_moving_average(fig, stock_df, ema_long_window, 'magenta')
-    fig = add_moving_average(fig, stock_df, ma_window, 'blue')
+    fig = add_volume(fig, plot_df)
+    return fig
 
-    fig = add_volume(fig, stock_df)
+def plot_different_stocks(stocks, price_type, title):
+    """Plot different stocks on a single plot."""
+    fig = init_stock_plot(title)
 
+    curve_colors = ['blue', 'green', 'cyan', 'magenta', 'yellow']
+    for idx, stock in enumerate(stocks):
+        color_index = idx % len(curve_colors)
+        dates = stock['df'].index.strftime('%Y-%m-%d')
+        values = stock['df'][price_type]
+        fig = add_scatter(fig, dates, values, stock['symbol'], curve_colors[color_index], visible=True)
 
-    fig.show()
-
-
+    return fig
