@@ -6,7 +6,6 @@ A small library to plot financial stock data using Plotly.
 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import numpy as np
 
 # Configuration section for colors and styling
 COLORS = {
@@ -106,7 +105,7 @@ def plot(stock_df, curves, title):
     fig = init_stock_plot(title)
     fig = add_candlestick(fig, plot_df)
 
-    curve_colors = ['blue', 'green', 'cyan', 'magenta', 'yellow']
+    curve_colors = ['blue', 'yellow', 'cyan', 'magenta']
     for idx, curve in enumerate(curves):
         color_index = idx % len(curve_colors)
         fig = add_scatter(fig, plot_df.index, curve['values'], curve['name'], curve_colors[color_index])
