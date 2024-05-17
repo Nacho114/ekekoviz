@@ -30,4 +30,5 @@ curves.append({'values': ema, 'name': 'ema 20'})
 ma = price.rolling(window=40, min_periods=1).mean()
 curves.append({'values': ma, 'name': 'ma 40'})
 
-ekekoviz.plot(stock_df, curves, f'{symbol} Close price action')
+fig = ekekoviz.plot(stock_df, curves, f'{symbol} Close price action')
+fig.show()
