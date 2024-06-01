@@ -49,7 +49,7 @@ def init_stock_plot(title):
     )
     return fig
 
-def add_volume(fig, stock_df):
+def add_volume(fig, stock_df, visible):
     """Add volume bars to the plot."""
     max_volume = stock_df['Volume'].max() * 1.5
     colors = [COLORS['green'] if open < close else COLORS['red'] for open, close in zip(stock_df['Open'], stock_df['Close'])]
@@ -61,14 +61,15 @@ def add_volume(fig, stock_df):
             marker_line_width=0,
             name='Volume',
             hoverinfo='none',
-            opacity=0.6
+            opacity=0.6,
+            visible=visible
         ),
         secondary_y=True
     )
     fig.update_yaxes(title_text="Volume", secondary_y=True, range=[0, max_volume])
     return fig
 
-def add_candlestick(fig, stock_df):
+def add_candlestick(fig, stock_df, visible):
     """Add candlestick plot to the figure."""
     fig.add_trace(
         go.Candlestick(
@@ -80,6 +81,7 @@ def add_candlestick(fig, stock_df):
             increasing_line_color=COLORS['green'],
             decreasing_line_color=COLORS['red'],
             name='Candlestick',
+            visible=visible
         )
     )
     fig.update_layout(xaxis_rangeslider_visible=False)
@@ -98,19 +100,24 @@ def add_scatter(fig, dates, values, name, color, visible='legendonly'):
     )
     return fig
 
-def plot(stock_df, curves, title):
+def plot(stock_df, curves, title, hide_candles_and_volume=True):
     """Plot stock data with additional curves."""
     plot_df = stock_df.copy()
     plot_df.index = plot_df.index.strftime('%Y-%m-%d')
     fig = init_stock_plot(title)
-    fig = add_candlestick(fig, plot_df)
 
-    curve_colors = ['blue', 'yellow', 'cyan', 'magenta']
+    visible = 'legendonly' if hide_candles_and_volume else True
+
+    fig = add_candlestick(fig, plot_df, visible)
+    
+    fig = add_scatter(fig, plot_df.index, plot_df['Close'], 'close', 'blue', True)
+
+    curve_colors = ['yellow', 'cyan', 'magenta']
     for idx, curve in enumerate(curves):
         color_index = idx % len(curve_colors)
         fig = add_scatter(fig, plot_df.index, curve['values'], curve['name'], curve_colors[color_index])
 
-    fig = add_volume(fig, plot_df)
+    fig = add_volume(fig, plot_df, visible)
     return fig
 
 def plot_different_stocks(stocks, price_type, title):
