@@ -49,7 +49,7 @@ def init_stock_plot(title):
     )
     return fig
 
-def add_volume(fig, stock_df, visible):
+def add_volume(fig, stock_df):
     """Add volume bars to the plot."""
     colors = [COLORS['green'] if open < close else COLORS['red'] for open, close in zip(stock_df['Open'], stock_df['Close'])]
 
@@ -61,7 +61,7 @@ def add_volume(fig, stock_df, visible):
             name='Volume',
             hoverinfo='none',
             opacity=0.6,
-            visible=visible
+            visible=True
         ),
         secondary_y=True
     )
@@ -83,7 +83,7 @@ def add_volume(fig, stock_df, visible):
     
     return fig
 
-def add_candlestick(fig, stock_df, visible):
+def add_candlestick(fig, stock_df):
     """Add candlestick plot to the figure."""
     fig.add_trace(
         go.Candlestick(
@@ -95,7 +95,7 @@ def add_candlestick(fig, stock_df, visible):
             increasing_line_color=COLORS['green'],
             decreasing_line_color=COLORS['red'],
             name='Candlestick',
-            visible=visible
+            visible='legendonly'
         )
     )
     fig.update_layout(xaxis_rangeslider_visible=False)
@@ -150,30 +150,30 @@ def add_scatter(fig, dates, values, name, color, visible='legendonly'):
             y=values,
             name=name,
             line=dict(color=color, width=2),
-            visible=visible
+            visible=visible,
+            hoverinfo='none',
         )
     )
     return fig
 
-def plot(stock_df, curves=None, title="110", hide_candles_and_volume=True, buysell_df=None):
+def plot(stock_df, other_dfs=None, buysell_df=None, title="110"):
     """Plot stock data with additional curves and buy/sell markers."""
     plot_df = stock_df.copy()
     plot_df.index = plot_df.index.strftime('%Y-%m-%d')
     fig = init_stock_plot(title)
 
-    visible = 'legendonly' if hide_candles_and_volume else True
-
-    fig = add_candlestick(fig, plot_df, visible)
+    fig = add_candlestick(fig, plot_df)
+    
     
     fig = add_scatter(fig, plot_df.index, plot_df['Close'], 'close', 'blue', True)
 
     curve_colors = ['yellow', 'cyan', 'magenta']
-    if curves:
-        for idx, curve in enumerate(curves):
+    if other_dfs:
+        for idx, other_df in enumerate(other_dfs):
             color_index = idx % len(curve_colors)
-            fig = add_scatter(fig, plot_df.index, curve['values'], curve['name'], curve_colors[color_index])
+            fig = add_scatter(fig, plot_df.index, other_df, other_df.name, curve_colors[color_index])
 
-    fig = add_volume(fig, plot_df, True)
+    fig = add_volume(fig, plot_df)
 
     if buysell_df is not None:
         fig = add_buysell(fig, buysell_df)
