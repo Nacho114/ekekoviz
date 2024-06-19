@@ -1,7 +1,7 @@
 import os
 import zipfile
 
-def _read_files_recursively(directory):
+def _read_files_recursively(directory: str) -> list:
     """
     Helper function to read files recursively from a directory.
 
@@ -17,7 +17,7 @@ def _read_files_recursively(directory):
             file_paths.append(os.path.join(root, file))
     return file_paths
 
-def read_files_from_zip(zip_path, extract_path):
+def read_files_from_zip(zip_path: str, extract_path: str) -> list:
     """
     Read files from a zip archive to an extract path
 
@@ -35,7 +35,7 @@ def read_files_from_zip(zip_path, extract_path):
         zip_ref.extractall(extract_path)
         return _read_files_recursively(extract_path)
 
-def read_files_from_directory(directory):
+def read_files_from_directory(directory: str) -> list:
     """
     Read files from a directory.
 
