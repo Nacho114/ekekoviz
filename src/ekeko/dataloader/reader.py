@@ -17,18 +17,21 @@ def _read_files_recursively(directory):
             file_paths.append(os.path.join(root, file))
     return file_paths
 
-def read_files_from_zip(zip_path):
+def read_files_from_zip(zip_path, extract_path):
     """
-    Read files from a zip archive.
+    Read files from a zip archive to an extract path
 
     Parameters:
     zip_path (str): Path to the zip file.
+    extract_path (str): Path to extract contents.
 
     Returns:
     list: List of file paths inside the zip archive.
     """
+    # Create the extraction directory if it does not exist
+    os.makedirs(extract_path, exist_ok=True)
+
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        extract_path = os.path.splitext(zip_path)[0]  # Extract to a folder with the same name as the zip file
         zip_ref.extractall(extract_path)
         return _read_files_recursively(extract_path)
 
