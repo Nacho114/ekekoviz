@@ -51,7 +51,6 @@ def init_stock_plot(title):
 
 def add_volume(fig, stock_df, visible):
     """Add volume bars to the plot."""
-    max_volume = stock_df['Volume'].max() * 1.5
     colors = [COLORS['green'] if open < close else COLORS['red'] for open, close in zip(stock_df['Open'], stock_df['Close'])]
 
     fig.add_trace(
@@ -66,7 +65,22 @@ def add_volume(fig, stock_df, visible):
         ),
         secondary_y=True
     )
-    fig.update_yaxes(title_text="Volume", secondary_y=True, range=[0, max_volume])
+
+    # Update the secondary y-axis range to be at most 15% of the plot height
+    fig.update_yaxes(
+        title_text="Volume",
+        secondary_y=True,
+        range=[0, stock_df['Volume'].max() * 5],  # Scale factor to adjust the height
+        showgrid=False,
+        zeroline=False
+    )
+    
+    # Update layout to adjust the margin between the main plot and volume plot
+    fig.update_layout(
+        margin=dict(l=50, r=50, t=50, b=50),
+        # height=700  # Adjust height as needed
+    )
+    
     return fig
 
 def add_candlestick(fig, stock_df, visible):
@@ -87,6 +101,47 @@ def add_candlestick(fig, stock_df, visible):
     fig.update_layout(xaxis_rangeslider_visible=False)
     return fig
 
+def add_buysell(fig, buysell_df):
+    """Add buy/sell markers to the plot."""
+    buys = buysell_df[buysell_df['Type'] == 'BUY']
+    sells = buysell_df[buysell_df['Type'] == 'SELL']
+    
+    fig.add_trace(
+        go.Scatter(
+            x=buys['Date'],
+            y=buys['Price'],
+            mode='markers',
+            marker=dict(
+                symbol='triangle-up', 
+                size=14, 
+                color=COLORS['green'],
+                line=dict(color='black', width=2.5)  # Adding black border
+            ),
+            name='Buy',
+            hoverinfo='text',
+            text=[f'Buy<br>Price: {price}<br>Size: {size}' for price, size in zip(buys['Price'], buys['Size'])]
+        )
+    )
+    
+    fig.add_trace(
+        go.Scatter(
+            x=sells['Date'],
+            y=sells['Price'],
+            mode='markers',
+            marker=dict(
+                symbol='triangle-down', 
+                size=14, 
+                color=COLORS['red'],
+                line=dict(color='black', width=2.5)  # Adding black border
+            ),
+            name='Sell',
+            hoverinfo='text',
+            text=[f'Sell<br>Price: {price}<br>Size: {size}' for price, size in zip(sells['Price'], sells['Size'])]
+        )
+    )
+    
+    return fig
+
 def add_scatter(fig, dates, values, name, color, visible='legendonly'):
     """Add scatter plot to the figure."""
     fig.add_trace(
@@ -100,8 +155,8 @@ def add_scatter(fig, dates, values, name, color, visible='legendonly'):
     )
     return fig
 
-def plot(stock_df, curves, title, hide_candles_and_volume=True):
-    """Plot stock data with additional curves."""
+def plot(stock_df, curves=None, title="110", hide_candles_and_volume=True, buysell_df=None):
+    """Plot stock data with additional curves and buy/sell markers."""
     plot_df = stock_df.copy()
     plot_df.index = plot_df.index.strftime('%Y-%m-%d')
     fig = init_stock_plot(title)
@@ -113,11 +168,16 @@ def plot(stock_df, curves, title, hide_candles_and_volume=True):
     fig = add_scatter(fig, plot_df.index, plot_df['Close'], 'close', 'blue', True)
 
     curve_colors = ['yellow', 'cyan', 'magenta']
-    for idx, curve in enumerate(curves):
-        color_index = idx % len(curve_colors)
-        fig = add_scatter(fig, plot_df.index, curve['values'], curve['name'], curve_colors[color_index])
+    if curves:
+        for idx, curve in enumerate(curves):
+            color_index = idx % len(curve_colors)
+            fig = add_scatter(fig, plot_df.index, curve['values'], curve['name'], curve_colors[color_index])
 
-    fig = add_volume(fig, plot_df, visible)
+    fig = add_volume(fig, plot_df, True)
+
+    if buysell_df is not None:
+        fig = add_buysell(fig, buysell_df)
+        
     return fig
 
 def plot_different_stocks(stocks, price_type, title):
