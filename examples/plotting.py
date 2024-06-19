@@ -1,5 +1,5 @@
 import yfinance as yf
-import ekekoviz
+import ekeko
 # !<User notes>! Specify symbol and period of data to pull
 # --------------------
 symbol = "GPS"
@@ -30,5 +30,5 @@ curves.append({'values': ema, 'name': 'ema 20'})
 ma = price.rolling(window=40, min_periods=1).mean()
 curves.append({'values': ma, 'name': 'ma 40'})
 
-fig = ekekoviz.plot(stock_df, curves, f'{symbol} Close price action')
+fig = ekeko.viz.plot(stock_df, curves, f'{symbol} Close price action')
 fig.show()
