@@ -5,6 +5,7 @@ A small library to plot financial stock data using Plotly.
 """
 
 import plotly.graph_objects as go
+import plotly.express as px
 from plotly.subplots import make_subplots
 
 # Configuration section for colors and styling
@@ -236,6 +237,6 @@ def scatter(x, y, labels, title):
     )
     
     # Make the scatter points bigger and more visible
-    fig.update_traces(marker=dict(size=10, line=dict(width=2, color='DarkSlateGrey')))
+    fig.update_traces(marker=dict(size=10, line=dict(width=2, color='palegreen')))
     
     return fig
