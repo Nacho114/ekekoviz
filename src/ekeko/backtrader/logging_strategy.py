@@ -67,10 +67,10 @@ class SingleStockPerformance:
         return (f"{self.ticker} Backtrading Performance Report:\n\n"
                 f"Initial Cash: {self.initial_cash:.2f}\n"
                 f"Final Cash: {self.final_cash:.2f}\n"
-                f"Unrealized Gain: {self.unrealized_gain:.2f}\n"
                 f"Open Position Value: {self.open_position_value:.2f}\n"
-                f"Realized Gain: {self.realized_gain:.2f}\n"
                 f"Total Final Value: {self.total_final_value:.2f}\n\n"
+                f"Realized Gain: {self.realized_gain:.2f}\n"
+                f"Unrealized Gain: {self.unrealized_gain:.2f}\n"
                 f"Top Trades (PnL): \n{self.sorted_trades_df.head()}")
 
 class LoggingStrategy(bt.Strategy):

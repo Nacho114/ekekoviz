@@ -192,3 +192,50 @@ def plot_different_stocks(stocks, price_type, title):
         fig = add_scatter(fig, dates, values, stock['symbol'], curve_colors[color_index], visible=True)
 
     return fig
+
+def scatter(x, y, labels, title):
+    """
+    Creates a scatter plot with customized aesthetics.
+    
+    Args:
+        x (list): x-axis values.
+        y (list): y-axis values.
+        labels (dict): A dictionary containing label configurations for the plot.
+        title (str): The title of the plot.
+        
+    Returns:
+        plotly.graph_objects.Figure: The configured plot.
+    """
+    # Create the scatter plot
+    fig = px.scatter(
+        x=x,
+        y=y,
+        labels=labels,
+        title=title
+    )
+    
+    # Update layout with the custom color and grid settings
+    fig.update_layout(
+        paper_bgcolor=COLORS['background'],
+        plot_bgcolor=COLORS['background'],
+        font=dict(color=COLORS['text']),
+        xaxis=dict(
+            showgrid=True,
+            gridcolor=COLORS['grid_line'],
+            gridwidth=1,
+            griddash='dot',
+            nticks=GRID_N_TICKS
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridcolor=COLORS['grid_line'],
+            gridwidth=1,
+            griddash='dot',
+            nticks=GRID_N_TICKS
+        )
+    )
+    
+    # Make the scatter points bigger and more visible
+    fig.update_traces(marker=dict(size=10, line=dict(width=2, color='DarkSlateGrey')))
+    
+    return fig
