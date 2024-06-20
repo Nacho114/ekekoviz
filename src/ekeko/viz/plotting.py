@@ -238,5 +238,6 @@ def scatter(x, y, labels, title):
     
     # Make the scatter points bigger and more visible
     fig.update_traces(marker=dict(size=10, line=dict(width=2, color='palegreen')))
+    fig.update_xaxes(linecolor=COLORS['background'])
     
     return fig
