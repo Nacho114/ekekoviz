@@ -32,9 +32,9 @@ class EmaCross(LoggingStrategy):
         super().__init__(logger)
         # Define the fast and slow exponential moving averages
         self.ema_fast = bt.indicators.ExponentialMovingAverage(
-            self.data.close, period=self.params.pfast)
+            self.data.close, period=self.params.pfast) # type: ignore
         self.ema_slow = bt.indicators.ExponentialMovingAverage(
-            self.data.close, period=self.params.pslow)
+            self.data.close, period=self.params.pslow) # type: ignore
 
     def next(self):
         # Example trading logic based on EMA crossovers
@@ -48,7 +48,7 @@ class EmaCross(LoggingStrategy):
                 self.sell()
         super().next()
 
-data = bt.feeds.PandasData(dataname=stock_df)
+data = bt.feeds.PandasData(dataname=stock_df) # type: ignore
 
 # Initialize the 'Cerebro' engine
 cerebro = bt.Cerebro()
