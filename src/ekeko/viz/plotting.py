@@ -96,21 +96,21 @@ def add_candlestick(fig, stock_df):
             increasing_line_color=COLORS['green'],
             decreasing_line_color=COLORS['red'],
             name='Candlestick',
-            visible='legendonly'
+            visible=True
         )
     )
     fig.update_layout(xaxis_rangeslider_visible=False)
     return fig
 
-def add_buysell(fig, buysell_df):
+def add_transactions(fig, buysell_df):
     """Add buy/sell markers to the plot."""
-    buys = buysell_df[buysell_df['Type'] == 'BUY']
-    sells = buysell_df[buysell_df['Type'] == 'SELL']
+    buys = buysell_df[buysell_df['size'] > 0]
+    sells = buysell_df[buysell_df['size'] < 0]
     
     fig.add_trace(
         go.Scatter(
-            x=buys['Date'],
-            y=buys['Price'],
+            x=buys.index,
+            y=buys['price'],
             mode='markers',
             marker=dict(
                 symbol='triangle-up', 
@@ -120,14 +120,14 @@ def add_buysell(fig, buysell_df):
             ),
             name='Buy',
             hoverinfo='text',
-            text=[f'Buy<br>Price: {price}<br>Size: {size}' for price, size in zip(buys['Price'], buys['Size'])]
+            text=[f'Buy<br>Price: {price}<br>Size: {size}' for price, size in zip(buys['price'], buys['size'])]
         )
     )
     
     fig.add_trace(
         go.Scatter(
-            x=sells['Date'],
-            y=sells['Price'],
+            x=sells.index,
+            y=sells['price'],
             mode='markers',
             marker=dict(
                 symbol='triangle-down', 
@@ -137,7 +137,7 @@ def add_buysell(fig, buysell_df):
             ),
             name='Sell',
             hoverinfo='text',
-            text=[f'Sell<br>Price: {price}<br>Size: {size}' for price, size in zip(sells['Price'], sells['Size'])]
+            text=[f'Sell<br>Price: {price}<br>Size: {size}' for price, size in zip(sells['price'], sells['size'])]
         )
     )
     
@@ -157,7 +157,7 @@ def add_scatter(fig, dates, values, name, color, visible='legendonly'):
     )
     return fig
 
-def plot(stock_df, other_dfs=None, buysell_df=None, title="110"):
+def plot(stock_df, other_dfs=None, transactions=None, title="110"):
     """Plot stock data with additional curves and buy/sell markers."""
     plot_df = stock_df.copy()
     plot_df.index = plot_df.index.strftime('%Y-%m-%d')
@@ -165,19 +165,21 @@ def plot(stock_df, other_dfs=None, buysell_df=None, title="110"):
 
     fig = add_candlestick(fig, plot_df)
     
-    
-    fig = add_scatter(fig, plot_df.index, plot_df['Close'], 'close', 'blue', True)
+    fig = add_scatter(fig, plot_df.index, plot_df['Close'], 'close', 'blue', 'legendonly')
 
     curve_colors = ['yellow', 'cyan', 'magenta']
     if other_dfs:
         for idx, other_df in enumerate(other_dfs):
             color_index = idx % len(curve_colors)
-            fig = add_scatter(fig, plot_df.index, other_df, other_df.name, curve_colors[color_index])
+            other_df.index = other_df.index.strftime('%Y-%m-%d')
+            fig = add_scatter(fig, other_df.index, other_df, other_df.name, curve_colors[color_index])
 
     fig = add_volume(fig, plot_df)
 
-    if buysell_df is not None:
-        fig = add_buysell(fig, buysell_df)
+    if transactions is not None:
+        transactions.index
+        transactions.index = transactions.index.strftime('%Y-%m-%d')
+        fig = add_transactions(fig, transactions)
         
     return fig
 
